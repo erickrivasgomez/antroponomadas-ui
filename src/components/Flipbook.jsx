@@ -40,6 +40,7 @@ const initializePdfWorker = () => {
 };
 
 function Flipbook() {
+  const [currentPage, setCurrentPage] = useState(1);
   const documentOptions = useMemo(() => ({
     cMapUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/cmaps/`,
     cMapPacked: true,
@@ -112,35 +113,41 @@ function Flipbook() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Check if device is mobile
+  const isMobile = useMemo(() => {
+    return window.innerWidth <= 768; // Common breakpoint for mobile devices
+  }, []);
+
   // Calculate page size based on container dimensions
   const pageSize = useMemo(() => {
     // Use more of the available space
-    const padding = 20; // Reduced padding for more space
+    const padding = isMobile ? 10 : 20; // Smaller padding on mobile
     const containerHeight = dimensions.height - (padding * 2);
     const containerWidth = dimensions.width - (padding * 2);
     
     // A4 aspect ratio (height/width)
     const ratio = Math.sqrt(2); // More precise A4 ratio (1.4142...)
     
-    // Start with 95% of container width (increased from 90%)
-    let width = containerWidth * .97;
+    // On mobile, use full width minus padding
+    let width = isMobile ? containerWidth * 0.98 : containerWidth * 0.97;
     let height = width * ratio;
     
     // If height exceeds container, scale down to fit
     if (height > containerHeight) {
-      height = containerHeight * .97; // Use 95% of container height
+      height = containerHeight * (isMobile ? 0.98 : 0.97);
       width = height / ratio;
     }
     
     // Ensure minimum size
-    const minWidth = 300;
+    const minWidth = isMobile ? 250 : 300;
     const minHeight = minWidth * ratio;
     
     return { 
       width: Math.max(Math.floor(width), minWidth), 
-      height: Math.max(Math.floor(height), Math.floor(minHeight))
+      height: Math.max(Math.floor(height), Math.floor(minHeight)),
+      isMobile
     };
-  }, [dimensions]);
+  }, [dimensions, isMobile]);
   
   // Initialize PDF.js worker on component mount
   useEffect(() => {
@@ -186,6 +193,91 @@ function Flipbook() {
   function renderPages() {
     if (!numPages) return null;
 
+    // On mobile, only render the current page
+    if (pageSize.isMobile) {
+      return (
+        <div
+          key={`page-mobile`}
+          className="page"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'white',
+            padding: 0,
+            margin: '0 auto',
+            overflow: 'hidden',
+            width: '100%',
+            height: '100%',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}
+        >
+          <Page
+            key={`page-${currentPage}`}
+            pageNumber={currentPage}
+            width={pageSize.width}
+            loading={<div>Cargando página {currentPage}...</div>}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            className="pdf-page"
+          />
+          {/* Navigation buttons for mobile */}
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0 20px',
+            zIndex: 10
+          }}>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage <= 1}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                opacity: currentPage <= 1 ? 0.5 : 1
+              }}
+            >
+              Anterior
+            </button>
+            <span style={{
+              color: '#666',
+              alignSelf: 'center',
+              backgroundColor: 'rgba(255,255,255,0.8)',
+              padding: '5px 15px',
+              borderRadius: '15px',
+              fontSize: '0.9em'
+            }}>
+              {currentPage} / {numPages}
+            </span>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(numPages, prev + 1))}
+              disabled={currentPage >= numPages}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                opacity: currentPage >= numPages ? 0.5 : 1
+              }}
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Original flipbook view for desktop
     return Array.from({ length: numPages }, (_, i) => i + 1).map((pageNumber) => (
       <div
         key={`page-${pageNumber}`}
