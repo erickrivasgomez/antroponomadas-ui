@@ -13,20 +13,36 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const documentRef = useRef(null);
-  
+
+  // Handle orientation change
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('resize', handleOrientationChange);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
   // Handle document load success
   const onDocumentLoadSuccess = useCallback(() => {
     // Loading is handled by onLoadProgress
   }, []);
-  
+
   // Handle document load progress
   const onLoadProgress = useCallback(({ loaded, total }) => {
     const progress = Math.round((loaded / total) * 100);
     setLoadingProgress(progress);
-    
+
     // Only set loading to false when we've fully loaded
     if (progress === 100) {
       // Small delay to ensure smooth transition
@@ -36,19 +52,20 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
       return () => clearTimeout(timer);
     }
   }, []);
-  
+
   // Handle document load error
   const onDocumentLoadError = useCallback((error) => {
     console.error('Error loading PDF:', error);
     setIsLoading(false);
   }, []);
-  
+
   // Reset loading state when PDF URL changes
   useEffect(() => {
     setIsLoading(true);
     setLoadingProgress(0);
   }, [pdfUrl]);
 
+  // Handle touch events for page navigation
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -59,18 +76,20 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
 
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return;
-    
+
     const diff = touchStartX.current - touchEndX.current;
     const swipeThreshold = 50;
-    
+
     if (Math.abs(diff) > swipeThreshold) {
       if (diff > 0 && currentPage < numPages) {
-        setCurrentPage(prev => prev + 1);
+        // Swipe left - go to next page(s)
+        setCurrentPage(prev => Math.min(prev + (isLandscape ? 2 : 1), numPages));
       } else if (diff < 0 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
+        // Swipe right - go to previous page(s)
+        setCurrentPage(prev => Math.max(prev - (isLandscape ? 2 : 1), 1));
       }
     }
-    
+
     touchStartX.current = 0;
     touchEndX.current = 0;
   };
@@ -78,7 +97,7 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
   // Loading component - only renders when isLoading is true
   const renderLoader = useCallback(() => {
     if (!isLoading) return null;
-    
+
     return (
       <div style={{
         position: 'absolute',
@@ -125,29 +144,57 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
   }, [isLoading, loadingProgress]);
 
   // Page component with loading state
-  const renderPage = useCallback((pageNumber) => (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {renderLoader()}
-      <Document
-        inputRef={documentRef}
-        file={pdfUrl}
-        onLoadSuccess={onDocumentLoadSuccess}
-        onLoadProgress={onLoadProgress}
-        onLoadError={onDocumentLoadError}
-        loading=""
-      >
-        <Page
-          key={`page-${pageNumber}`}
-          pageNumber={pageNumber}
-          width={Math.min(pageSize.width - 20, window.innerWidth - 20)}
+  const renderPage = useCallback((pageNumber, isSecondPage = false) => {
+    const pageStyle = {
+      position: 'relative',
+      width: isLandscape ? '50%' : '100%',
+      height: '100%',
+      display: 'inline-block',
+      verticalAlign: 'top',
+      overflow: 'hidden'
+    };
+
+    return (
+      <div style={pageStyle}>
+        {renderLoader()}
+        <Document
+          inputRef={documentRef}
+          file={pdfUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          onLoadProgress={onLoadProgress}
+          onLoadError={onDocumentLoadError}
           loading=""
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          className="pdf-page"
-        />
-      </Document>
-    </div>
-  ), [pdfUrl, pageSize, renderLoader, onDocumentLoadSuccess, onLoadProgress, onDocumentLoadError]);
+        >
+          <Page
+            key={`page-${pageNumber}${isSecondPage ? '-2' : ''}`}
+            pageNumber={pageNumber}
+            width={isLandscape ? (window.innerWidth / 2) - 30 : window.innerWidth - 40}
+            loading=""
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            className="pdf-page"
+          />
+        </Document>
+      </div>
+    );
+  }, [pdfUrl, isLandscape, renderLoader, onDocumentLoadSuccess, onLoadProgress, onDocumentLoadError]);
+
+  // Render two-page spread in landscape mode
+  const renderPageSpread = useCallback((pageNumber) => {
+    const isLastPage = pageNumber >= numPages;
+
+    return (
+      <div style={{ 
+        display: 'flex', 
+        width: '100%', 
+        height: '100%',
+        position: 'relative'
+      }}>
+        {renderPage(pageNumber, false)}
+        {!isLastPage && renderPage(pageNumber + 1, true)}
+      </div>
+    );
+  }, [numPages, renderPage]);
 
   return (
     <div 
@@ -161,7 +208,8 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#f5f5f5',
-        touchAction: 'pan-y'
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch'
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -176,43 +224,45 @@ const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
         padding: '10px',
         boxSizing: 'border-box',
         backgroundColor: 'white',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+        overflow: 'hidden',
+        position: 'relative'
       }}>
-        {renderPage(currentPage)}
-      </div>
+        {isLandscape ? renderPageSpread(currentPage) : renderPage(currentPage)}
 
-      {/* Navigation Controls - Invisible touch areas */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '40%',
-        zIndex: 2,
-        display: 'flex',
-        justifyContent: 'space-between',
-        pointerEvents: 'none'
-      }}>
-        <div 
-          style={{
-            width: '40%',
-            height: '100%',
-            pointerEvents: 'auto',
-            cursor: 'pointer'
-          }}
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-          aria-label="Página anterior"
-        />
-        <div 
-          style={{
-            width: '40%',
-            height: '100%',
-            pointerEvents: 'auto',
-            cursor: 'pointer'
-          }}
-          onClick={() => setCurrentPage(prev => Math.min(numPages, prev + 1))}
-          aria-label="Siguiente página"
-        />
+        {/* Navigation Controls - Invisible touch areas */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '40%',
+          zIndex: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          pointerEvents: 'none'
+        }}>
+          <div 
+            style={{
+              width: '40%',
+              height: '100%',
+              pointerEvents: 'auto',
+              cursor: 'pointer'
+            }}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - (isLandscape ? 2 : 1)))}
+            aria-label="Página anterior"
+          />
+          <div 
+            style={{
+              width: '40%',
+              height: '100%',
+              pointerEvents: 'auto',
+              cursor: 'pointer'
+            }}
+            onClick={() => setCurrentPage(prev => Math.min(numPages, prev + (isLandscape ? 2 : 1)))}
+            aria-label="Siguiente página"
+          />
+        </div>
       </div>
     </div>
   );
