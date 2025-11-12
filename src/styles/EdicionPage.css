@@ -1,0 +1,73 @@
+/* Estilos para la página de edición */
+.edicion-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.edicion-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  overflow: auto;
+  background-color: #e0e0e0;
+}
+
+/* Estilos para el contenedor del flipbook */
+.flipbook-container {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Estilos para pantallas más pequeñas */
+@media (max-width: 768px) {
+  .edicion-content {
+    padding: 0.5rem;
+  }
+  
+  .flipbook-container {
+    border-radius: 0;
+  }
+}
+
+/* Estilos para el modo de pantalla completa */
+:fullscreen .edicion-content {
+  padding: 0;
+}
+
+:fullscreen .flipbook-container {
+  max-width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Ajustes para la impresión */
+@media print {
+  .app-header {
+    display: none;
+  }
+  
+  .edicion-page, .edicion-content {
+    height: auto;
+    overflow: visible;
+    background: none;
+  }
+  
+  .flipbook-container {
+    box-shadow: none;
+    max-width: 100%;
+  }
+}

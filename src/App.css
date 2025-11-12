@@ -1,0 +1,104 @@
+:root {
+  --header-height: 60px;
+  /* Usando las variables del tema */
+  --primary-color: var(--color-text-primary);
+  --secondary-color: var(--color-accent);
+  --text-color: var(--color-text-primary);
+  --light-bg: var(--color-bg-alt);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-color);
+  line-height: var(--leading-normal);
+  overflow-x: hidden;
+}
+
+/* Estilos para la aplicación en general */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  background-color: var(--color-bg);
+  position: relative;
+}
+
+/* Estilos específicos para la página de flipbook (sin scroll) */
+.app.flipbook-mode {
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000;
+}
+
+/* Header */
+.app > header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 1000;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Contenido principal */
+.app-content {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Contenido del flipbook (sin scroll) */
+.app.flipbook-mode .app-content {
+  height: calc(100vh - var(--header-height));
+  overflow: hidden;
+}
+
+/* Contenido de la página de inicio */
+.home-page {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Eliminamos el margen adicional del contenedor del flipbook */
+.flipbook-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+
+/* Reset some default styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}

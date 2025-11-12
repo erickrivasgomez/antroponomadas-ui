@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import HTMLFlipBook from 'react-pageflip';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import '../Modal.css';
+import './Flipbook.css';
+
+// Set up the worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+function Flipbook() {
+  const [numPages, setNumPages] = useState(null);
+  const [error, setError] = useState(null);
+  const containerHeight = window.innerHeight * 0.91; // 90% of window
+  const bookHeight = containerHeight;       // 15% smaller
+  const bookWidth = bookHeight / 1.414;            // A4 ratio (width = height / ratio)
+
+  function onDocumentLoadSuccess({ numPages }) {
+    console.log(`Successfully loaded ${numPages} page(s)`);
+    setNumPages(numPages);
+  }
+
+  function onDocumentLoadError(error) {
+    console.error('Error while loading PDF:', error);
+    setError('Failed to load PDF. Please try again.');
+  }
+
+  function renderPages() {
+    if (!numPages) return null;
+
+    // Calculate the maximum width while maintaining aspect ratio
+    const maxWidth = Math.min(1000, window.innerWidth - 40); // 20px padding on each side
+
+    const pages = [];
+    for (let i = 1; i <= numPages; i++) {
+      pages.push(
+        <div
+          key={`page-${i}`}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '10px 0',
+            backgroundColor: 'white',
+            marginBottom: '10px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+        >
+          <Page
+            width={maxWidth}
+            pageNumber={i}
+            loading={<div>Loading page {i}...</div>}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+          />
+        </div>
+      );
+    }
+    return pages;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  return (
+    <div className="flipbook-container">
+      <Document
+        file={window.location.origin + "/template.pdf"}
+        onLoadSuccess={onDocumentLoadSuccess}
+        onLoadError={onDocumentLoadError}
+        loading={<div>Loading PDF...</div>}
+        className="modal-90w"
+      >
+        <HTMLFlipBook
+          width={bookWidth}
+          height={bookHeight}
+          minWidth={bookWidth}
+          maxWidth={bookWidth}
+          minHeight={bookHeight}
+          maxHeight={bookHeight}
+          size="fixed"
+          autoSize={false}
+          drawShadow={true}
+          flippingTime={1000}
+          usePortrait={false}
+          showCover={true}
+          startPage={0}
+          useMouseEvents={true}
+          swipeDistance={30}
+          showPageCorners={true}
+          disableFlipByClick={false}
+        >
+          {renderPages()}
+        </HTMLFlipBook>
+
+      </Document>
+    </div>
+  );
+}
+export default Flipbook;

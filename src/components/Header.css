@@ -1,0 +1,391 @@
+/* Modern 2025-2026 Header Styles */
+.app-header {
+  --header-height: 80px;
+  width: 100%;
+  min-height: var(--header-height);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Glass morphism effect on scroll */
+.app-header.scrolled {
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure h1 text is white */
+.app-header h1 {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.header-container {
+  width: 100%;
+  max-width: 1440px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0.75rem 0;
+  margin: 0 auto;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-family: var(--font-decorative);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--color-moss);
+  white-space: nowrap;
+  letter-spacing: 1.5px;
+  text-transform: none;
+  position: relative;
+  padding: 0.5rem 0;
+  transition: all 0.3s ease;
+  line-height: 1;
+  transform: none;
+  background: linear-gradient(90deg, var(--color-moss), var(--color-wood));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+/* Modern decorative element */
+.app-header h1::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(193, 124, 116, 0.1) 0%,
+    transparent 60%
+  );
+  z-index: -1;
+  opacity: 0.8;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-header.scrolled h1::before {
+  opacity: 0.4;
+  transform: translate(-50%, -50%) rotate(-1deg) scale(0.98);
+}
+
+.app-header h1::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background-color: var(--color-clay);
+  transition: width 0.3s ease;
+}
+
+.app-header h1:hover::after {
+  width: 100%;
+}
+
+/* Header Buttons */
+/* Modern navigation buttons */
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  margin-left: auto;
+  transition: all 0.3s ease;
+}
+
+.header-button {
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--color-moss);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-family: var(--font-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.header-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transform: scale(0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: -1;
+}
+
+.header-button:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(90, 111, 91, 0.1);
+}
+
+.header-button:hover::before {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.header-button.primary {
+  background: var(--color-moss);
+  color: white;
+  border: 2px solid var(--color-moss);
+}
+
+.header-button.primary:hover {
+  background: var(--color-wood);
+  border-color: var(--color-wood);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(90, 111, 91, 0.2);
+}
+
+/* Mobile menu button */
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-moss);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: 1rem;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.mobile-menu-button:hover {
+  color: var(--color-clay);
+  background-color: rgba(193, 124, 116, 0.1);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .app-header h1 {
+    font-size: 2.75rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1;
+    padding-bottom: 1.5rem;
+  }
+  
+  .app-header h1::before {
+    width: 140px;
+    height: 60px;
+    top: -10px;
+  }
+  
+  .header-buttons {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    background-color: var(--color-bg);
+    flex-direction: column;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-150%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+  
+  .header-buttons.mobile-visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .header-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+.header-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  border: 1px solid var(--color-sage);
+  border-radius: 30px;
+  color: var(--color-moss);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.header-button i {
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.header-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-sage), var(--color-moss));
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: -1;
+  border-radius: 30px;
+}
+
+.header-button:hover {
+  color: white;
+  border-color: var(--color-moss);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(90, 111, 91, 0.2);
+}
+
+.header-button:hover::before {
+  width: 100%;
+}
+
+.header-button:hover i {
+  transform: translateX(3px);
+  color: white;
+}
+
+/* Disabled state */
+.header-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.header-button:disabled::before {
+  width: 0 !important;
+}
+
+.header-button:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  transform: translateY(-1px);
+}
+
+.header-button:active {
+  transform: translateY(0);
+}
+
+.header-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-icon {
+  font-size: 1rem;
+}
+
+.button-text {
+  display: inline-block;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.5rem 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .app-header h1 {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .header-button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  
+  .button-text {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.5rem;
+  }
+  
+  .header-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .button-icon {
+    font-size: 0.9rem;
+  }
+}
