@@ -115,7 +115,7 @@ const HomePage = () => {
         
         <main className="main-content">
           <section className="hero">
-            <h2 className="hero-title">Explora el mundo a través de la antropología</h2>
+            <h2 className="hero-title">Explora el mundo a través de los sentipensares de la antropología</h2>
             <p className="hero-subtitle">Nuevas perspectivas, historias únicas, culturas fascinantes</p>
           </section>
           

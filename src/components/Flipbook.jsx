@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaHome, FaDownload, FaExpand, FaCompress } from 'react-icons/fa';
 import HTMLFlipBook from 'react-pageflip';
@@ -7,6 +7,216 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import '../Modal.css';
 import './Flipbook.css';
+
+// Mobile Flipbook Component
+const MobileFlipbook = ({ numPages, pageSize, pdfUrl }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const documentRef = useRef(null);
+  
+  // Handle document load success
+  const onDocumentLoadSuccess = useCallback(() => {
+    // Loading is handled by onLoadProgress
+  }, []);
+  
+  // Handle document load progress
+  const onLoadProgress = useCallback(({ loaded, total }) => {
+    const progress = Math.round((loaded / total) * 100);
+    setLoadingProgress(progress);
+    
+    // Only set loading to false when we've fully loaded
+    if (progress === 100) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  
+  // Handle document load error
+  const onDocumentLoadError = useCallback((error) => {
+    console.error('Error loading PDF:', error);
+    setIsLoading(false);
+  }, []);
+  
+  // Reset loading state when PDF URL changes
+  useEffect(() => {
+    setIsLoading(true);
+    setLoadingProgress(0);
+  }, [pdfUrl]);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    const swipeThreshold = 50;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0 && currentPage < numPages) {
+        setCurrentPage(prev => prev + 1);
+      } else if (diff < 0 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      }
+    }
+    
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
+  // Loading component - only renders when isLoading is true
+  const renderLoader = useCallback(() => {
+    if (!isLoading) return null;
+    
+    return (
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        zIndex: 10,
+        transition: 'opacity 0.3s ease',
+        opacity: isLoading ? 1 : 0,
+        pointerEvents: isLoading ? 'auto' : 'none'
+      }}>
+        <div style={{
+          width: '60%',
+          maxWidth: '300px',
+          height: '4px',
+          backgroundColor: '#f0f0f0',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          marginBottom: '16px'
+        }}>
+          <div style={{
+            width: `${loadingProgress}%`,
+            height: '100%',
+            backgroundColor: '#3f51b5',
+            transition: 'width 0.2s ease-out'
+          }} />
+        </div>
+        <div style={{ 
+          color: '#666', 
+          fontSize: '14px',
+          transition: 'opacity 0.2s ease',
+          opacity: loadingProgress > 0 ? 1 : 0
+        }}>
+          Cargando {loadingProgress}%
+        </div>
+      </div>
+    );
+  }, [isLoading, loadingProgress]);
+
+  // Page component with loading state
+  const renderPage = useCallback((pageNumber) => (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {renderLoader()}
+      <Document
+        inputRef={documentRef}
+        file={pdfUrl}
+        onLoadSuccess={onDocumentLoadSuccess}
+        onLoadProgress={onLoadProgress}
+        onLoadError={onDocumentLoadError}
+        loading=""
+      >
+        <Page
+          key={`page-${pageNumber}`}
+          pageNumber={pageNumber}
+          width={Math.min(pageSize.width - 20, window.innerWidth - 20)}
+          loading=""
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+          className="pdf-page"
+        />
+      </Document>
+    </div>
+  ), [pdfUrl, pageSize, renderLoader, onDocumentLoadSuccess, onLoadProgress, onDocumentLoadError]);
+
+  return (
+    <div 
+      style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        backgroundColor: '#f5f5f5',
+        touchAction: 'pan-y'
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '10px',
+        boxSizing: 'border-box',
+        backgroundColor: 'white',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+      }}>
+        {renderPage(currentPage)}
+      </div>
+
+      {/* Navigation Controls - Invisible touch areas */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        zIndex: 2,
+        display: 'flex',
+        justifyContent: 'space-between',
+        pointerEvents: 'none'
+      }}>
+        <div 
+          style={{
+            width: '40%',
+            height: '100%',
+            pointerEvents: 'auto',
+            cursor: 'pointer'
+          }}
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          aria-label="Página anterior"
+        />
+        <div 
+          style={{
+            width: '40%',
+            height: '100%',
+            pointerEvents: 'auto',
+            cursor: 'pointer'
+          }}
+          onClick={() => setCurrentPage(prev => Math.min(numPages, prev + 1))}
+          aria-label="Siguiente página"
+        />
+      </div>
+    </div>
+  );
+};
 
 // Set the PDF.js version - should match your react-pdf version
 const PDFJS_VERSION = '3.11.174';
@@ -40,7 +250,6 @@ const initializePdfWorker = () => {
 };
 
 function Flipbook() {
-  const [currentPage, setCurrentPage] = useState(1);
   const documentOptions = useMemo(() => ({
     cMapUrl: `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/cmaps/`,
     cMapPacked: true,
@@ -190,91 +399,70 @@ function Flipbook() {
     // Don't hide loader here, we'll use the timer
   }, []);
 
+  // State to track current page for mobile view
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showZoomControls, setShowZoomControls] = useState(false);
+  const transformComponentRef = useRef(null);
+  const lastTap = useRef(0);
+
+  // Handle double tap for zoom in/out
+  const handleDoubleTap = (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap.current;
+    
+    if (tapLength < 300 && tapLength > 0) {
+      // Double tap detected
+      e.preventDefault();
+      if (transformComponentRef.current) {
+        const { state } = transformComponentRef.current;
+        if (state.scale > 1) {
+          transformComponentRef.current.resetTransform();
+        } else {
+          transformComponentRef.current.zoomIn();
+        }
+      }
+    }
+    lastTap.current = currentTime;
+  };
+
+  // Toggle zoom controls visibility
+  const toggleZoomControls = () => {
+    setShowZoomControls(prev => !prev);
+  };
+
   function renderPages() {
     if (!numPages) return null;
 
-    // On mobile, only render the current page
+    const renderPage = (pageNumber) => (
+      <div
+        key={`page-${pageNumber}`}
+        className="page"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'white',
+          padding: 0,
+          overflow: 'hidden',
+          width: '100%',
+          height: '100%',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Page
+          pageNumber={pageNumber}
+          width={pageSize.width}
+          loading={<div>Cargando página {pageNumber}...</div>}
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+          className="pdf-page"
+        />
+      </div>
+    );
+
+    // On mobile, use the MobileFlipbook component
     if (pageSize.isMobile) {
-      return (
-        <div
-          key={`page-mobile`}
-          className="page"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'white',
-            padding: 0,
-            margin: '0 auto',
-            overflow: 'hidden',
-            width: '100%',
-            height: '100%',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-          }}
-        >
-          <Page
-            key={`page-${currentPage}`}
-            pageNumber={currentPage}
-            width={pageSize.width}
-            loading={<div>Cargando página {currentPage}...</div>}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-            className="pdf-page"
-          />
-          {/* Navigation buttons for mobile */}
-          <div style={{
-            position: 'absolute',
-            bottom: '10px',
-            left: 0,
-            right: 0,
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '0 20px',
-            zIndex: 10
-          }}>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage <= 1}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                opacity: currentPage <= 1 ? 0.5 : 1
-              }}
-            >
-              Anterior
-            </button>
-            <span style={{
-              color: '#666',
-              alignSelf: 'center',
-              backgroundColor: 'rgba(255,255,255,0.8)',
-              padding: '5px 15px',
-              borderRadius: '15px',
-              fontSize: '0.9em'
-            }}>
-              {currentPage} / {numPages}
-            </span>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(numPages, prev + 1))}
-              disabled={currentPage >= numPages}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                opacity: currentPage >= numPages ? 0.5 : 1
-              }}
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-      );
+      return <MobileFlipbook numPages={numPages} pageSize={pageSize} pdfUrl={pdfUrl} />;
     }
 
     // Original flipbook view for desktop

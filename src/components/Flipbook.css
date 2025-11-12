@@ -8,9 +8,20 @@
   padding: 0;
   box-sizing: border-box;
   position: relative;
-  z-index: 1;
-  overflow: hidden;
-  padding-top: 32px;
+  z-index: 100000000;
+  overflow: scroll;
+  padding-top: 0px;
+  background-color: black;
+}
+
+/* Make all children transparent except circular buttons */
+.flipbook-container *:not(.floating-button) {
+  background-color: transparent !important;
+}
+
+/* Ensure circular buttons have the specified green color */
+.floating-button {
+  background-color: #123d25 !important;
 }
 
 /* PDF Document Container */
@@ -23,6 +34,7 @@
   flex-direction: column;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: transparent !important;
 }
 
 /* PDF Page */
@@ -37,7 +49,7 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  background: none !important;
+  background-color: transparent !important;
   box-shadow: none !important;
 }
 

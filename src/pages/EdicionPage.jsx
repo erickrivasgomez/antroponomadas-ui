@@ -36,7 +36,7 @@ export default function EdicionPage() {
 
   return (
     <div className="edition-container" style={{ 
-      height: `calc(100vh - var(--header-height))`,
+      height: `calc(100vh)`,
       width: '100%',
       position: 'relative'
     }}>
