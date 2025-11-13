@@ -416,12 +416,12 @@ function Flipbook() {
     }
 
     // Set the PDF URL with correct path from public folder
-    setPdfUrl('/ANTROPONOMADAS 1 ED.pdf');
+    setPdfUrl('/ANTROPONOMADAS 1 ED - min.pdf');
 
     // Set a fixed 18-second timer for the loading state
     const loadingTimer = setTimeout(() => {
       setIsLoading(false);
-    }, 18000);
+    }, 1000);
 
     // Clean up worker and timer on unmount
     return () => {
