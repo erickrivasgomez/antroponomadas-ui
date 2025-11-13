@@ -416,7 +416,7 @@ function Flipbook() {
     }
 
     // Set the PDF URL with correct path from public folder
-    setPdfUrl('/ANTROPONOMADAS 1 ED.pdf');
+    setPdfUrl('/ANTROPONOMADAS 1 ED - min.pdf');
 
     // Set a fixed 18-second timer for the loading state
     const loadingTimer = setTimeout(() => {
